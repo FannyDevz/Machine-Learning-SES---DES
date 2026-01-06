@@ -82,7 +82,7 @@ Buat file .env di root project:
 6. Jalankan Aplikasi Streamlit
 
 ```bash
-    streamlit run app/main.py
+    python -m streamlit run app/Home.py
 ```
 
 ## Catatan

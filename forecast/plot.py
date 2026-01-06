@@ -12,3 +12,4 @@ def plot_forecast(train, test, forecast, title="Forecast"):
     plt.legend()
     plt.grid(True)
     plt.show()
+

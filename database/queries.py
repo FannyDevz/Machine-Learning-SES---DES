@@ -44,3 +44,37 @@ def get_harga_harian(
         df = pd.read_sql(text(query), conn, params=params)
 
     return df
+
+
+def get_kode_kota_type() -> pd.DataFrame:
+    query = text("""
+        SELECT DISTINCT
+            kode_kota,
+            tipe
+        FROM history_data_beras_monthly
+        ORDER BY kode_kota, tipe
+    """)
+
+    engine = get_engine(DB_NAME)
+
+  
+    with engine.connect() as conn:
+        result = conn.execute(query).fetchall()
+
+    return [(row[0], row[1]) for row in result]
+
+
+def get_kode_kota() -> pd.DataFrame:
+    query = text("""
+        SELECT DISTINCT
+            kode_kota
+        FROM history_data_beras_monthly
+        ORDER BY kode_kota
+    """)
+
+    engine = get_engine(DB_NAME)
+
+  
+    with engine.connect() as conn:
+        result = conn.execute(query).fetchall()
+    return result

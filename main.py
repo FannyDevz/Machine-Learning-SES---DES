@@ -10,6 +10,7 @@ def menu():
     print("3. Transform Data Ke Bulanan")
     print("4. Export Data Harian ke CSV")
     print("5. Export Data Bulanan ke CSV")
+    print("6. Test Query")
     print("0. Keluar")
     return input("Pilih menu: ")
 
@@ -59,6 +60,8 @@ def main():
         elif pilihan == "5":
             tahun = input_tahun()
             export_monthly_to_csv(tahun)
+        elif pilihan == "6":
+            print("\n=== Test Query: get_kode_kota() ===")
         elif pilihan == "0":
             print("Keluar program.")
             break

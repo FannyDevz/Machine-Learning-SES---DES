@@ -32,6 +32,24 @@ TABLES = [
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         UNIQUE KEY uniq_harga_bulanan (kode_kota, tipe, bulan, tahun)
     );
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS forecast_harga_beras (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        kode_kota VARCHAR(50) NOT NULL,
+        tipe VARCHAR(10) NOT NULL,
+        model VARCHAR(10) NOT NULL, -- SES / DES
+        mae float(25) NOT NULL,
+        mape float(25) NOT NULL,
+        rmse float(25) NOT NULL,
+        tanggal DATE NOT NULL,
+        harga_prediksi INT NOT NULL,
+        normalized float NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_forecast (
+            kode_kota, tipe, model, tanggal
+        )
+    );
     """
 ]
 

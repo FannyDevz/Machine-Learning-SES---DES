@@ -2,6 +2,9 @@ from statsmodels.tsa.holtwinters import SimpleExpSmoothing
 
 
 def fit_ses(train_series, forecast_steps: int):
+    if train_series.index.freq is None:
+        train_series = train_series.asfreq("MS")
+        
     model = SimpleExpSmoothing(
         train_series,
         initialization_method="estimated"
