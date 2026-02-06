@@ -71,7 +71,7 @@ st.subheader("📊 Hasil Forecast")
 if model_choice == "SES":
     _, ses_forecast_scaled = fit_ses(train_scaled, len(test))
     st.write("### Single Exponential Smoothing (SES)")
-    st.write("MAPE:", mape(test_scaled, ses_forecast_scaled))
+    st.write("MAPE:", mape(test_scaled, ses_forecast_scaled)),"%"
     st.write("RMSE:", rmse(test_scaled, ses_forecast_scaled))
     fig = plot_forecast(train_scaled, test_scaled, ses_forecast_scaled, "SES Forecast Normalized")
     st.pyplot(fig)
@@ -84,7 +84,7 @@ if model_choice == "SES":
 elif model_choice == "DES":
     _, des_forecast_scaled = fit_des(train_scaled, len(test))
     st.write("### Double Exponential Smoothing (DES)")
-    st.write("MAPE:", mape(test_scaled, des_forecast_scaled))
+    st.write("MAPE:", mape(test_scaled, des_forecast_scaled)) ,"%"
     st.write("RMSE:", rmse(test_scaled, des_forecast_scaled))
     fig = plot_forecast(train_scaled, test_scaled, des_forecast_scaled, "DES Forecast")
     st.pyplot(fig)
@@ -99,7 +99,7 @@ else:
 
     st.success(f"""
     Model Terpilih: **{result['model']}**  
-    MAPE: {result['mape']:.2f}  
+    MAPE: {result['mape']:.2f}  %
     RMSE: {result['rmse']:.2f}
     """)
 

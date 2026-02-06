@@ -26,7 +26,7 @@ def load_monthly_series(
         WHERE kode_kota = :kode_kota
             AND tipe = :tipe 
             AND (
-            (tahun > 2022 OR (tahun = 2022 AND bulan >= 1)) -- Mulai Jan 2022
+            (tahun > 2023 OR (tahun = 2023 AND bulan >= 1)) -- Mulai Jan 2023
             AND 
             (tahun < 2025 OR (tahun = 2025 AND bulan <= 6)) -- Selesai Jun 2025
         )

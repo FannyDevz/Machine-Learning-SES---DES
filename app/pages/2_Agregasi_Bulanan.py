@@ -57,6 +57,7 @@ st.pyplot(
 # =====================
 st.subheader("📉 Perubahan Bulanan (MoM)")
 df_change = monthly_change(df)
+## Harga Rata RAta | Monthly Change | Monthly Persentase Change | Jumlah Hari
 st.dataframe(df_change[[
     "harga_ratarata", "mom_change", "mom_pct", "cnt_hari"
 ]])
