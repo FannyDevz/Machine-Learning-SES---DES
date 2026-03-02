@@ -70,57 +70,62 @@ st.subheader("📊 Hasil Forecast")
 
 if model_choice == "SES":
     _, ses_forecast_scaled = fit_ses(train_scaled, len(test))
-    st.write("### Single Exponential Smoothing (SES)")
-    st.write("MAPE:", mape(test_scaled, ses_forecast_scaled)),"%"
-    st.write("RMSE:", rmse(test_scaled, ses_forecast_scaled))
+    ses_forecast = minmax_inverse(ses_forecast_scaled, min_val, max_val)
+    nilai_mape = mape(test, ses_forecast)
+    rmse_scaled = rmse(test_scaled, ses_forecast_scaled) 
+    st.write(f"### Single Exponential Smoothing (SES)")
+    st.write(f"MAPE: {nilai_mape:.4f} %")
+    st.write(f"RMSE (Scaled): {rmse_scaled:.4f}")
     fig = plot_forecast(train_scaled, test_scaled, ses_forecast_scaled, "SES Forecast Normalized")
     st.pyplot(fig)
-    
-    ses_forecast = minmax_inverse(ses_forecast_scaled, min_val, max_val)
     
     fig = plot_forecast(train, test, ses_forecast, "SES Forecast ")
     st.pyplot(fig)
 
 elif model_choice == "DES":
     _, des_forecast_scaled = fit_des(train_scaled, len(test))
-    st.write("### Double Exponential Smoothing (DES)")
-    st.write("MAPE:", mape(test_scaled, des_forecast_scaled)) ,"%"
-    st.write("RMSE:", rmse(test_scaled, des_forecast_scaled))
+    des_forecast = minmax_inverse(des_forecast_scaled, min_val, max_val)
+    nilai_mape = mape(test, des_forecast) 
+    rmse_scaled = rmse(test_scaled, des_forecast_scaled) 
+    st.write(f"### Double Exponential Smoothing (DES)")
+    st.write(f"MAPE: {nilai_mape:.4f} %")
+    st.write(f"RMSE (Scaled): {rmse_scaled:.4f}")
     fig = plot_forecast(train_scaled, test_scaled, des_forecast_scaled, "DES Forecast")
     st.pyplot(fig)
-    
-    des_forecast = minmax_inverse(des_forecast_scaled, min_val, max_val)
     
     fig = plot_forecast(train, test, des_forecast, "DES Forecast ")
     st.pyplot(fig)
 
 else:
-    result = auto_select_model(train_scaled, test_scaled)
+    # Masukkan min_val dan max_val ke fungsi
+    result = auto_select_model(train_scaled, test_scaled, min_val, max_val)
 
     st.success(f"""
-    Model Terpilih: **{result['model']}**  
-    MAPE: {result['mape']:.2f}  %
-    RMSE: {result['rmse']:.2f}
+    Model Terpilih: **{result['model']}**      
+    MAPE: **{result['mape']:.4f} %**          
+    RMSE(Scaled): **{result['rmse_scaled']:.4f}**      
+    RMSE(Real): **{result['rmse_asli']:.4f}**
     """)
 
-        
-    fig = plot_forecast(
+    # Plotting data ternormalisasi
+    fig_norm = plot_forecast(
         train_scaled,
         test_scaled,
-        result["forecast"],
+        result["forecast_scaled"],
         f"Auto Forecast ({result['model']}) Normalized" 
     )
-    st.pyplot(fig)
+    st.pyplot(fig_norm)
     
-    frcst = minmax_inverse(result["forecast"], min_val, max_val)
+    # Inverse forecast untuk plotting data asli
+    frcst_asli = minmax_inverse(result["forecast_scaled"], min_val, max_val)
         
-    fig = plot_forecast(
+    fig_asli = plot_forecast(
         train,
         test,
-        frcst,
-        f"Auto Forecast ({result['model']})"
+        frcst_asli,
+        f"Auto Forecast ({result['model']}) Harga Asli"
     )
-    st.pyplot(fig)
+    st.pyplot(fig_asli)
 
 
 # ===============================
