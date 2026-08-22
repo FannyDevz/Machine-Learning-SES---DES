@@ -1,7 +1,7 @@
 import streamlit as st
 
-from app.utils.ui import setup_page, hero, stat_cards, pilih_kota, pilih_komoditas
-from app.utils import charts
+from app.uikit.ui import setup_page, hero, stat_cards, pilih_kota, pilih_komoditas
+from app.uikit import charts
 from forecast.dataset import load_monthly_series
 from forecast.split import train_test_split_ts
 from forecast.normalize import minmax_scale, minmax_inverse

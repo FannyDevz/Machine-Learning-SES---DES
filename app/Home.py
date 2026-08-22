@@ -1,6 +1,6 @@
 import streamlit as st
 
-from app.utils.ui import setup_page, hero, stat_cards, format_rupiah
+from app.uikit.ui import setup_page, hero, stat_cards, format_rupiah
 from app.services.data_service import get_overview
 
 setup_page("Dashboard Harga Komoditas", icon="📊")

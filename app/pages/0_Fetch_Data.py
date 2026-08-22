@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import date
 
-from app.utils.ui import setup_page, hero, stat_cards
+from app.uikit.ui import setup_page, hero, stat_cards
 from etl.extract import extract_range
 from etl.transform import transform_data
 from etl.load import load_to_db

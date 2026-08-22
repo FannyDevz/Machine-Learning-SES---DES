@@ -1,7 +1,7 @@
 import streamlit as st
 
-from app.utils.ui import setup_page, hero, stat_cards, format_rupiah, pilih_kota, pilih_komoditas
-from app.utils import charts
+from app.uikit.ui import setup_page, hero, stat_cards, format_rupiah, pilih_kota, pilih_komoditas
+from app.uikit import charts
 from analytics.monthly.dataset import load_monthly_data
 from analytics.monthly.stats import monthly_summary
 from analytics.monthly.change import monthly_change

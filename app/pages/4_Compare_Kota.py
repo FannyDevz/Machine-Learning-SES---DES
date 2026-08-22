@@ -1,7 +1,7 @@
 import streamlit as st
 
-from app.utils.ui import setup_page, hero, pilih_kota_multi, pilih_komoditas
-from app.utils import charts
+from app.uikit.ui import setup_page, hero, pilih_kota_multi, pilih_komoditas
+from app.uikit import charts
 from analytics.compare import load_compare_data
 
 setup_page("Perbandingan Kota", icon="🏙️")

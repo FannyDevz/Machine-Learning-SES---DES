@@ -1,7 +1,7 @@
 import streamlit as st
 
-from app.utils.ui import setup_page, hero, stat_cards, format_rupiah, pilih_kota, pilih_komoditas
-from app.utils import charts
+from app.uikit.ui import setup_page, hero, stat_cards, format_rupiah, pilih_kota, pilih_komoditas
+from app.uikit import charts
 from analytics.daily.dataset import load_daily_data
 from analytics.daily.stats import daily_stats
 from analytics.daily.change import daily_change
