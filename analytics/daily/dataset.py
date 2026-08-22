@@ -3,16 +3,16 @@ from sqlalchemy import text
 from database.connection import get_engine
 from config.settings import DB_NAME
 
-def load_daily_data(kode_kota, tipe, start, end):
+def load_daily_data(kode_kota, komoditas_id, start, end):
     engine = get_engine(DB_NAME)
 
     query = text("""
         SELECT
             tanggal,
             harga
-        FROM history_data_beras
+        FROM history_data_komoditas
         WHERE kode_kota = :kode_kota
-          AND tipe = :tipe
+          AND komoditas_id = :komoditas_id
           AND tanggal BETWEEN :start AND :end
         ORDER BY tanggal
     """)
@@ -23,7 +23,7 @@ def load_daily_data(kode_kota, tipe, start, end):
             conn,
             params={
                 "kode_kota": kode_kota,
-                "tipe": tipe,
+                "komoditas_id": komoditas_id,
                 "start": start,
                 "end": end
             }

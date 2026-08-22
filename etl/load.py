@@ -5,7 +5,7 @@ from utils.logger import logger
 
 def load_to_db(df):
     """
-    Upsert data ke history_data_beras:
+    Upsert data ke history_data_komoditas:
     - Insert jika belum ada
     - Update harga jika berubah
     - Skip jika sama
@@ -17,29 +17,32 @@ def load_to_db(df):
     engine = get_engine(DB_NAME)
 
     query = text("""
-        INSERT INTO history_data_beras (
+        INSERT INTO history_data_komoditas (
             kode_kota,
             nama_kota,
-            tipe,
+            komoditas_id,
+            komoditas_nama,
             harga,
             tanggal
         )
         VALUES (
             :kode_kota,
             :nama_kota,
-            :tipe,
+            :komoditas_id,
+            :komoditas_nama,
             :harga,
             :tanggal
         )
         ON DUPLICATE KEY UPDATE
             harga = IF(harga <> VALUES(harga), VALUES(harga), harga),
-            nama_kota = VALUES(nama_kota)
+            nama_kota = VALUES(nama_kota),
+            komoditas_nama = VALUES(komoditas_nama)
     """)
 
     rows = df.to_dict(orient="records")
 
     with engine.begin() as conn:
-        try:        
+        try:
             conn.execute(query, rows)
             logger.info(
                 f"Load sukses | rows={len(rows)}"

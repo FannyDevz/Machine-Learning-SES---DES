@@ -8,15 +8,14 @@ from forecast.normalize import minmax_scale, minmax_inverse
 from forecast.utils import generate_future_dates
 from forecast.save import save_forecast_to_db
 from utils.logger import logger
-from database.queries import get_kode_kota_type
 
 
 def main():
     kode_kota = "sampangkab"
-    tipe = "medium"
+    komoditas_id = 4  # Beras Medium
     horizon = 6  # prediksi 6 bulan ke depan
-    
-    series = load_monthly_series(kode_kota, tipe)
+
+    series = load_monthly_series(kode_kota, komoditas_id)
 
     test_size = len(series) // 5  # 20% test
 

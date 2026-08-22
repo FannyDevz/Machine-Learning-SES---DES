@@ -36,10 +36,10 @@ def transform_data(df: pd.DataFrame) -> pd.DataFrame:
     # 1️⃣ Bersihkan harga
     df["harga"] = df["harga"].apply(_clean_harga)
 
-    # 2️⃣ Isi harga kosong dengan rata-rata harian per kota & tipe
+    # 2️⃣ Isi harga kosong dengan rata-rata harian per kota & komoditas
     df["harga"] = df["harga"].fillna(
         df.groupby(
-            ["kode_kota", "tipe", "tanggal"]
+            ["kode_kota", "komoditas_id", "tanggal"]
         )["harga"].transform("mean")
     )
 

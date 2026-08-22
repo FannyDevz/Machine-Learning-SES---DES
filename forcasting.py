@@ -8,13 +8,13 @@ from forecast.normalize import minmax_scale, minmax_inverse
 from forecast.utils import generate_future_dates
 from forecast.save import save_forecast_to_db
 from utils.logger import logger
-from database.queries import get_kode_kota_type
+from database.queries import get_kode_kota_komoditas
 
 
-def main(kode_kota ,tipe):
+def main(kode_kota, komoditas_id):
     horizon = 6  # prediksi 6 bulan ke depan
-    
-    series = load_monthly_series(kode_kota, tipe)
+
+    series = load_monthly_series(kode_kota, komoditas_id)
 
     test_size = len(series) // 5  # 20% test
 
@@ -80,22 +80,22 @@ def main(kode_kota ,tipe):
     future_dates = generate_future_dates(series.index[-1], len(test))
     # ===== SIMPAN KE DB =====
     save_forecast_to_db(
-        kode_kota, tipe, "SES", ses_mae,  ses_mape, ses_rmse,
-        future_dates, ses_forecast , ses_forecast_scaled
+        kode_kota, komoditas_id, "SES", ses_mae, ses_mape, ses_rmse,
+        future_dates, ses_forecast, ses_forecast_scaled
     )
 
     save_forecast_to_db(
-        kode_kota, tipe, "DES",  des_mae,  des_mape, des_rmse,
+        kode_kota, komoditas_id, "DES", des_mae, des_mape, des_rmse,
         future_dates, des_forecast, des_forecast_scaled
     )
-    
+
 if __name__ == "__main__":
-    daftar_kombinasi = get_kode_kota_type() 
-    
-    for kode_kota, tipe in daftar_kombinasi:
-        print(f"Memproses {kode_kota} - {tipe}...")
+    daftar_kombinasi = get_kode_kota_komoditas()
+
+    for kode_kota, komoditas_id in daftar_kombinasi:
+        print(f"Memproses {kode_kota} - komoditas {komoditas_id}...")
         try:
-            main(kode_kota, tipe)
+            main(kode_kota, komoditas_id)
         except Exception as e:
-            logger.error(f"{kode_kota}-{tipe} gagal: {e}")
+            logger.error(f"{kode_kota}-{komoditas_id} gagal: {e}")
 

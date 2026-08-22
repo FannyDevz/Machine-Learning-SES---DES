@@ -1,70 +1,64 @@
 import streamlit as st
 
-from sqlalchemy import text
-from database.connection import get_engine
-from config.settings import DB_NAME
-
+from app.utils.ui import setup_page, hero, stat_cards, format_rupiah, pilih_kota, pilih_komoditas
+from app.utils import charts
 from analytics.daily.dataset import load_daily_data
 from analytics.daily.stats import daily_stats
 from analytics.daily.change import daily_change
 from analytics.daily.outlier import detect_spike
-from analytics.daily.plot import plot_daily_price
 
+setup_page("Analitik Harian", icon="📊")
+hero("📊 Analitik Harga Harian", "Statistik, tren, dan deteksi lonjakan harga per kota & komoditas.")
 
-# ===============================
-# Helper: ambil daftar kota
-# ===============================
+# ---- Filter ----------------------------------------------------------------
+with st.container(border=True):
+    c1, c2 = st.columns(2)
+    with c1:
+        kode_kota = pilih_kota()
+    with c2:
+        komoditas_id, komoditas_nama = pilih_komoditas()
+    c3, c4 = st.columns(2)
+    with c3:
+        start = st.date_input("Tanggal Mulai")
+    with c4:
+        end = st.date_input("Tanggal Akhir")
 
-def get_daftar_kota():
-    engine = get_engine(DB_NAME)
-    query = text("""
-        SELECT DISTINCT kode_kota
-        FROM history_data_beras
-        ORDER BY kode_kota
-    """)
-    with engine.connect() as conn:
-        return [row[0] for row in conn.execute(query).fetchall()]
+df = load_daily_data(kode_kota, komoditas_id, start, end)
 
-st.title("📊 Analitik Harga Harian")
+if df.empty:
+    st.warning("Data tidak ditemukan untuk filter ini.")
+    st.stop()
 
-kode_kota = st.selectbox("Kota", get_daftar_kota())
-tipe = st.radio("Tipe Beras", ["medium", "premium"], horizontal=True)
+st.markdown(f"<span class='badge'>{komoditas_nama} · {kode_kota}</span>", unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
-with col1:
-    start = st.date_input("Tanggal Mulai")
-with col2:
-    end = st.date_input("Tanggal Akhir")
+# ---- Statistik -------------------------------------------------------------
+s = daily_stats(df)
+stat_cards([
+    {"label": "Rata-rata", "value": format_rupiah(s["mean"]), "accent": True},
+    {"label": "Tertinggi", "value": format_rupiah(s["max"])},
+    {"label": "Terendah", "value": format_rupiah(s["min"])},
+    {"label": "Median", "value": format_rupiah(s["median"])},
+])
 
-df = load_daily_data(kode_kota, tipe, start, end)
+# ---- Grafik ----------------------------------------------------------------
+st.subheader("Tren Harga Harian")
+plot_df = df.reset_index()
+st.plotly_chart(
+    charts.line_price(plot_df, x="tanggal", y="harga", name=komoditas_nama),
+    use_container_width=True,
+)
 
-# =====================
-# Statistik
-# =====================
-stats = daily_stats(df)
+# ---- Detail ----------------------------------------------------------------
+tab1, tab2 = st.tabs(["🚨 Lonjakan Harga", "📉 Perubahan Harian"])
 
-st.metric("Harga Minimum", stats["min"])
-st.metric("Harga Maksimum", stats["max"])
-st.metric("Rata-rata", round(stats["mean"], 2))
+with tab1:
+    spike = detect_spike(df, threshold_pct=5)
+    if not spike.empty:
+        st.warning(f"Terdeteksi {len(spike)} lonjakan harga (≥5%).")
+        st.dataframe(spike, use_container_width=True)
+    else:
+        st.success("Tidak ada lonjakan signifikan (≥5%).")
 
-# =====================
-# Grafik
-# =====================
-st.pyplot(plot_daily_price(df))
-
-# =====================
-# Perubahan Harian
-# =====================
-df_change = daily_change(df)
-st.subheader("📉 Perubahan Harian")
-st.dataframe(df_change.tail(100))
-
-# =====================
-# Lonjakan Harga
-# =====================
-spike = detect_spike(df, threshold_pct=5)
-if not spike.empty:
-    st.warning("🚨 Terdeteksi lonjakan harga!")
-    st.dataframe(spike)
-else:
-    st.success("Tidak ada lonjakan signifikan")
+with tab2:
+    df_change = daily_change(df)
+    st.dataframe(df_change.tail(100), use_container_width=True)

@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Pipeline for collecting, storing, analyzing, and forecasting **rice (beras) prices** across cities in East Java (Jawa Timur), Indonesia. Data is scraped from the public SISKAPERBAPO API, stored in MySQL, aggregated to monthly series, forecasted with SES/DES exponential smoothing, and visualized in a Streamlit dashboard. Codebase comments, docstrings, and UI are primarily in **Indonesian**; match that language when editing user-facing strings and logs.
+Pipeline for collecting, storing, analyzing, and forecasting **commodity prices** (beras/rice, gula/sugar, cooking oil, eggs, meat, chili, onions, fish, etc. — ~50 commodities) across cities in East Java (Jawa Timur), Indonesia. Data is scraped from the public SISKAPERBAPO API, stored in MySQL, aggregated to monthly series, forecasted with SES/DES exponential smoothing, and visualized in a Streamlit dashboard. Codebase comments, docstrings, and UI are primarily in **Indonesian**; match that language when editing user-facing strings and logs.
+
+Each commodity is identified by a `komoditas_id` (the API's `komoditas` query param, e.g. 2 = Beras Premium, 4 = Beras Medium, 7 = Gula). The catalog of known commodities lives in `etl/komoditas.py` (`DEFAULT_CATALOG`). There is **no** `tipe` column anymore — the old beras premium/medium `tipe` was replaced by `komoditas_id` and its data backfilled (premium→2, medium→4).
 
 ## Setup & Commands
 
@@ -51,19 +53,19 @@ Run any module-level entrypoint as a module (`python -m etl.run_etl`), not by pa
 
 ## Architecture
 
-Data flows through three MySQL tables (defined in `database/migrations.py`), each with a UNIQUE key enabling idempotent upserts:
+Data flows through three MySQL tables (defined in `database/migrations.py`), each with a UNIQUE key enabling idempotent upserts. Every table carries `komoditas_id` (int) + `komoditas_nama` (denormalized display name):
 
-1. **`history_data_beras`** — raw daily prices per `(kode_kota, tipe, tanggal)`.
-2. **`history_data_beras_monthly`** — monthly avg/min/max, aggregated by SQL `GROUP BY` in `etl/aggregate.py`.
-3. **`forecast_harga_beras`** — SES/DES predictions + MAE/MAPE/RMSE per `(kode_kota, tipe, model, tanggal)`.
+1. **`history_data_komoditas`** — raw daily prices, UNIQUE `(kode_kota, komoditas_id, tanggal)`.
+2. **`history_data_komoditas_monthly`** — monthly avg/min/max, UNIQUE `(kode_kota, komoditas_id, bulan, tahun)`, aggregated by SQL `GROUP BY` in `etl/aggregate.py`.
+3. **`forecast_harga_komoditas`** — SES/DES predictions + MAE/MAPE/RMSE, UNIQUE `(kode_kota, komoditas_id, model, tanggal)`.
 
-`tipe` is always `"premium"` or `"medium"` (mapped to API commodity codes 2 and 4 in `etl/extract.py`). `kode_kota` is the API's city code string (e.g. `"sampangkab"`).
+`kode_kota` is the API's city code string (e.g. `"sampangkab"`). `migrations.run_migrations()` also backfills any legacy `history_data_beras*` tables into the new ones (idempotent `INSERT IGNORE`), so old data survives the rename.
 
 ### Pipeline stages
 
-- **ETL** (`etl/`): `extract.py` scrapes `siskaperbapo.jatimprov.go.id` per date × tipe → `transform.py` cleans prices (`_clean_harga` strips `Rp`/dots, fills NaN with per-group daily mean) → `load.py` upserts via `ON DUPLICATE KEY UPDATE`. `run_etl.py` orchestrates (`run()` for a date range, `run_daily()` for one day); `aggregate.py` rolls daily → monthly entirely in SQL.
-- **Forecast** (`forecast/`): `dataset.load_monthly_series()` pulls a monthly `pd.Series` (hardcoded window Jan 2023–Jun 2025) → `split.train_test_split_ts()` → `normalize.minmax_scale()` (**fit on train only**, transform test with train min/max) → `ses.py`/`des.py` wrap statsmodels `SimpleExpSmoothing`/`Holt` → `evaluate.py` computes MAE/MAPE/RMSE → `save.save_forecast_to_db()`. `auto_select.py` picks SES vs DES by lowest metric (default MAPE).
-- **App** (`app/`): Streamlit multipage. `app/Home.py` is the entry; `app/pages/` are numbered pages (daily analytics, monthly aggregation, forecast, city comparison). `app/services/` and `app/components/` hold data access and UI helpers.
+- **ETL** (`etl/`): `komoditas.py` holds the commodity catalog (`get_catalog()` for the UI fetch selector; `get_catalog_from_db()` lists commodities that already have data — used by analytics/forecast pages). `extract.py` scrapes `siskaperbapo.jatimprov.go.id` per date × commodity, reading `komoditas_nama` straight from the API response → `transform.py` cleans prices (`_clean_harga` strips `Rp`/dots, fills NaN with per-`(kode_kota, komoditas_id, tanggal)` mean) → `load.py` upserts via `ON DUPLICATE KEY UPDATE`. `run_etl.py` / `extract_*` accept `komoditas_ids` (defaults to `[2, 4]` = beras premium+medium for backward compat). `aggregate.py` rolls daily → monthly entirely in SQL.
+- **Forecast** (`forecast/`): `dataset.load_monthly_series(kode_kota, komoditas_id)` pulls a monthly `pd.Series` (all available months) → `split.train_test_split_ts()` → `normalize.minmax_scale()` (**fit on train only**, transform test with train min/max) → `ses.py`/`des.py` wrap statsmodels `SimpleExpSmoothing`/`Holt` → `evaluate.py` computes MAE/MAPE/RMSE → `save.save_forecast_to_db()`. `auto_select.py` picks SES vs DES by lowest metric (default MAPE).
+- **App** (`app/`): Streamlit multipage. `app/Home.py` is the entry; `app/pages/` are numbered pages: `0_Fetch_Data` (ETL + aggregation UI, multiselect commodities), daily analytics, monthly aggregation, forecast, city comparison. Each page inlines a `pilih_komoditas()` helper (selectbox backed by `get_catalog_from_db()`) — matching the pre-existing per-page `get_daftar_kota()` convention. `app/services/` and `app/components/` hold data access and UI helpers.
 - **Analytics** (`analytics/`): read-only reporting split into `daily/` and `monthly/` submodules (`dataset`, `stats`, `change`, `plot`, `outlier`); `compare.py` for multi-city comparison.
 
 ### Cross-cutting conventions

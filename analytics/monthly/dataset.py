@@ -3,7 +3,7 @@ from sqlalchemy import text
 from database.connection import get_engine
 from config.settings import DB_NAME
 
-def load_monthly_data(kode_kota, tipe, start_year=None, end_year=None):
+def load_monthly_data(kode_kota, komoditas_id, start_year=None, end_year=None):
     engine = get_engine(DB_NAME)
 
     query = """
@@ -14,14 +14,14 @@ def load_monthly_data(kode_kota, tipe, start_year=None, end_year=None):
             harga_tertinggi,
             harga_terendah,
             cnt_hari
-        FROM history_data_beras_monthly
+        FROM history_data_komoditas_monthly
         WHERE kode_kota = :kode_kota
-          AND tipe = :tipe
+          AND komoditas_id = :komoditas_id
     """
 
     params = {
         "kode_kota": kode_kota,
-        "tipe": tipe
+        "komoditas_id": komoditas_id
     }
 
     if start_year:

@@ -6,15 +6,15 @@ from config.settings import DB_NAME
 
 def load_monthly_series(
     kode_kota: str,
-    tipe: str,
+    komoditas_id: int,
     jenis_data: str = "harga_ratarata"
 ) -> pd.Series:
-    
+
     ALLOWED_COLS = {"harga_ratarata", "harga_tertinggi", "harga_terendah"}
-        
+
     if jenis_data not in ALLOWED_COLS:
         raise ValueError("jenis_data tidak valid")
-    
+
     engine = get_engine(DB_NAME)
 
     query = text("""
@@ -22,14 +22,9 @@ def load_monthly_series(
             tahun,
             bulan,
             """ + jenis_data + """
-        FROM history_data_beras_monthly
+        FROM history_data_komoditas_monthly
         WHERE kode_kota = :kode_kota
-            AND tipe = :tipe 
-            AND (
-            (tahun > 2023 OR (tahun = 2023 AND bulan >= 1)) -- Mulai Jan 2023
-            AND 
-            (tahun < 2025 OR (tahun = 2025 AND bulan <= 6)) -- Selesai Jun 2025
-        )
+            AND komoditas_id = :komoditas_id
         ORDER BY tahun, bulan
     """)
 
@@ -39,7 +34,7 @@ def load_monthly_series(
             conn,
             params={
                 "kode_kota": kode_kota,
-                "tipe": tipe
+                "komoditas_id": komoditas_id
             }
         )
 
@@ -52,6 +47,4 @@ def load_monthly_series(
 
     df.set_index("date", inplace=True)
 
-    return df["" + jenis_data + ""]
-
-
+    return df[jenis_data]
